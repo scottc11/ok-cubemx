@@ -8,6 +8,11 @@
                 "${workspaceFolder}/Core/Src/*",
                 "${workspaceFolder}/Drivers/*",
                 "${workspaceFolder}/Drivers/CMSIS/**",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Include/*",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/*",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/*",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/*",
+                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/iar/*",
                 "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/*",
                 "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Inc/*",
                 "${workspaceFolder}/Drivers/STM32F4xx_HAL_Driver/Src/*"
