@@ -46,6 +46,9 @@ TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN PV */
 uint16_t metroCounter = 0;
 uint16_t inputCapture = 1000;
+uint16_t timestamp = 0;
+bool superEdge = false;
+uint16_t superCounty = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,11 +65,16 @@ static void MX_TIM2_Init(void);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if (htim == &htim1) {
     metroCounter += 1;
-
-    if (metroCounter >= inputCapture) {
-      HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-      HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_10);
-      metroCounter = 0;
+    superCounty += 1;
+    if (superCounty < 100)
+    {
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+    }
+    else
+    {
+      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
     }
   }
 }
@@ -75,6 +83,8 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM2)
   {
+    // when a capture is made, it is technically on the rising edge of the input signal, so use this as a timestamp for the start of the sequence / metronome tick 0
+    superCounty = 0;
     __HAL_TIM_SetCounter(&htim2, 0); // reset counter after each input capture
     inputCapture = __HAL_TIM_GetCompare(&htim2, TIM_CHANNEL_4);
   }
@@ -259,7 +269,7 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_FALLING;
   sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
   sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
   sConfigIC.ICFilter = 0;
