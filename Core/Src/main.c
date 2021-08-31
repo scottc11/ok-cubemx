@@ -90,6 +90,19 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   }
 }
 
+/**
+ * The key in this callback is to reset the sequencer and/or clock step to 0 (ie. step 1)
+ * This way, the sequence will always be in sync with the beat because the rising edge of the external tempo signal will always line up to tick 0 of the sequence.
+ * 
+ * The caveat being we risk losing ticks near the end of each external clock signal, because the callback could execute before the final few ticks have a chance of being handled.
+ * This could cause issues if there is important sequence data in those last remaining ticks, such as setting a trigger output high or low.
+ * 
+ * To remedy this problem, we could keep track of how many ticks have executed in the sequence for each clock signal, so that if the HAL_TIM_IC_CaptureCallback executes prior to 
+ * the last tick in the sequence, we could quickly execute all those remaining ticks in rapid succession - which could sound weird, but likely neccessary.
+ * 
+ * NOTE: The downfall of this approach is that some steps of the sequence will be missed when the external tempo signal increases,
+ * but this should be a more musical way to keeping things in sync.
+ */
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM2)
