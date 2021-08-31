@@ -36,7 +36,7 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-#define PPQN 96
+#define PPQN 4
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
@@ -47,7 +47,9 @@ TIM_HandleTypeDef htim2;
 uint16_t metroCounter = 0;
 uint16_t inputCapture = 1000;
 uint16_t timestamp = 0;
-bool superEdge = false;
+uint16_t tickLength = 0;
+uint16_t pulseLength = 0;
+bool hasTicked = false;
 uint16_t superCounty = 0;
 /* USER CODE END PV */
 
@@ -65,17 +67,26 @@ static void MX_TIM2_Init(void);
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if (htim == &htim1) {
     metroCounter += 1;
-    superCounty += 1;
-    if (superCounty < 100)
-    {
-      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
-      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+
+    if (hasTicked == false) {
+      if (superCounty < tickLength)
+      {
+        if (superCounty == 0)
+        {
+          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+        }
+        else if (superCounty == pulseLength)
+        {
+          HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+          HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
+        }
+        superCounty += 1;
+      } else {
+        superCounty = 0;
+      }
     }
-    else
-    {
-      HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
-      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
-    }
+    
   }
 }
 
@@ -83,10 +94,14 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
   if (htim->Instance == TIM2)
   {
-    // when a capture is made, it is technically on the rising edge of the input signal, so use this as a timestamp for the start of the sequence / metronome tick 0
+    /**
+     * Reset the sequence clock to zero, so it will trigger the clock output in the period elapsed loop callback
+    */ 
     superCounty = 0;
     __HAL_TIM_SetCounter(&htim2, 0); // reset counter after each input capture
     inputCapture = __HAL_TIM_GetCompare(&htim2, TIM_CHANNEL_4);
+    tickLength = (inputCapture * 2) / PPQN;
+    pulseLength = tickLength / 4;
   }
 }
 /* USER CODE END 0 */
