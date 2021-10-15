@@ -2,7 +2,7 @@
     "configurations": [
         {
             "name": "Mac",
-            "compilerPath": "/usr/local/bin/arm-none-eabi-gcc",
+            "compilerPath": "/opt/homebrew/bin/arm-none-eabi-gcc",
             "includePath": [
                 "${workspaceFolder}/Core/Inc/*",
                 "${workspaceFolder}/Core/Src/*",
