@@ -2,13 +2,11 @@
     "configurations": [
         {
             "name": "Mac",
-            "compilerPath": "/usr/local/bin/arm-none-eabi-gcc",
+            "compilerPath": "/opt/homebrew/bin/arm-none-eabi-gcc",
             "includePath": [
                 "${workspaceFolder}/Core/Inc/*",
                 "${workspaceFolder}/Core/Src/*",
                 "${workspaceFolder}/Drivers/*",
-                "${workspaceFolder}/Drivers/CMSIS/**",
-                "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Include/*",
                 "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/*",
                 "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/arm/*",
                 "${workspaceFolder}/Drivers/CMSIS/Device/ST/STM32F4xx/Source/Templates/gcc/*",

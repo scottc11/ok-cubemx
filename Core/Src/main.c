@@ -102,6 +102,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
  * 
  * NOTE: The downfall of this approach is that some steps of the sequence will be missed when the external tempo signal increases,
  * but this should be a more musical way to keeping things in sync.
+ * 
+ * NOTE: When jumping from a really fast tempo to a really slow tempo, the sequence steps will progress much faster than the incoming tempo (before the IC Calculation has time to update the sequencer pulse duration)
+ * This means the sequence could technically get several beats ahead of any other gear.
+ * To handle this, you could prevent the next sequence step from occuring if all sub-steps of the current step have been executed prior to a new IC event
  */
 void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
 {
