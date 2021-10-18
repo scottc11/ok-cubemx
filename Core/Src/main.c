@@ -47,10 +47,10 @@ TIM_HandleTypeDef htim2;
 uint16_t metroCounter = 0;
 uint16_t inputCapture = 1000;
 uint16_t timestamp = 0;
-uint16_t tickLength = 0;
-uint16_t pulseLength = 0;
+uint16_t stepLength = 0;        // how long in "ticks" (via currTick variable) a sequence step is
+uint16_t subStepLength = 0;     // a division of stepLength
 bool hasTicked = false;
-uint16_t superCounty = 0;
+uint16_t currTick = 0;          // this var increases by 1 every time TIM1 overflows. It is used to measure the length of a step and a steps sub-step
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -64,26 +64,38 @@ static void MX_TIM2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/**
+ * This callback handles all TIMx overflow interupts (if TIMx was configured in interupt mode)
+ * Ideally, you would use this to manage a global / system tick value, which then gets devided down
+ * to handle events at a lower frequency.
+*/ 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if (htim == &htim1) {
     metroCounter += 1;
 
     if (hasTicked == false) {
-      if (superCounty < tickLength)
+      if (currTick < stepLength)
       {
-        if (superCounty == 0)
+        // set external clock output HIGH at the beginning of each step
+        if (currTick == 0)
         {
           HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
           HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
         }
-        else if (superCounty == pulseLength)
+        
+        // after one subTick, set external clock output back to LOW
+        else if (currTick == subStepLength)
         {
           HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
           HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
         }
-        superCounty += 1;
-      } else {
-        superCounty = 0;
+
+        currTick += 1;
+      }
+      // if currTick overflows stepLength, then reset currTick to 0
+      else {
+        currTick = 0;
       }
     }
     
@@ -114,11 +126,11 @@ void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
     /**
      * Reset the sequence clock to zero, so it will trigger the clock output in the period elapsed loop callback
     */ 
-    superCounty = 0;
+    currTick = 0;
     __HAL_TIM_SetCounter(&htim2, 0); // reset counter after each input capture
     inputCapture = __HAL_TIM_GetCompare(&htim2, TIM_CHANNEL_4);
-    tickLength = (inputCapture * 2) / PPQN;
-    pulseLength = tickLength / 4;
+    stepLength = (inputCapture * 2) / PPQN;
+    subStepLength = stepLength / 4;
   }
 }
 /* USER CODE END 0 */
