@@ -92,14 +92,10 @@ int main(void)
 
   volatile HAL_StatusTypeDef status;
 
-  uint8_t dacMode = 0b00100000;
+  uint8_t dacMode = 0b00010000;
   uint8_t dacChan = 0;
-  uint8_t config = dacMode | (dacChan << 1);
   uint16_t value = 0;
 
-  uint8_t byte2 = (value >> 8) & 0xFF;
-  uint8_t byte3 = value & 0xFF;
-  uint8_t data[3] = { config, byte2, byte3 };
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
@@ -107,13 +103,18 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    value += 10;
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
-    uint8_t byte2 = (value >> 8) & 0xFF;
-    uint8_t byte3 = value & 0xFF;
-    uint8_t data[3] = {config, byte2, byte3};
-    status = HAL_SPI_Transmit(&hspi2, (uint8_t *)data, 3, HAL_MAX_DELAY);
-    HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+    value += 50;
+    for (int i = 0; i < 4; i++)
+    {
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+      uint8_t config = dacMode | (i << 1);
+      uint8_t byte2 = (value >> 8) & 0xFF;
+      uint8_t byte3 = value & 0xFF;
+      uint8_t data[3] = {config, byte2, byte3};
+      status = HAL_SPI_Transmit(&hspi2, (uint8_t *)data, 3, HAL_MAX_DELAY);
+      HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+    }
+    
     HAL_Delay(1);
     /* USER CODE END WHILE */
 
