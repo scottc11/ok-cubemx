@@ -54,11 +54,34 @@ static void MX_USART3_UART_Init(void);
 
 /* USER CODE BEGIN PFP */
 
+typedef uint32_t Counter;
+Counter task1Counter, task2Counter;  // it is wise to add a simple counter to each task to ensure its executing
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void vTask1(void *pvParameters)
+{
+  char msg[] = "Task 1 \n";
+  while (1)
+  {
+    task1Counter++;
+    HAL_UART_Transmit(&huart3, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+    HAL_Delay(500);
+  }
+}
 
+void vTask2(void *pvParameters)
+{
+  char msg[] = "Task 2 \n";
+  while (1)
+  {
+    task2Counter++;
+    HAL_UART_Transmit(&huart3, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+    HAL_Delay(500);
+  }
+}
 /* USER CODE END 0 */
 
 /**
@@ -92,6 +115,11 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
   char serialData[4] = "a b ";
+
+  xTaskCreate(vTask1, "Task 1", 100, NULL, 1, NULL);
+  xTaskCreate(vTask2, "Task 2", 100, NULL, 1, NULL);
+
+  vTaskStartScheduler();
   /* USER CODE END 2 */
 
 
