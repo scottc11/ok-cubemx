@@ -38,6 +38,8 @@
 
 #define RED_LED_PIN GPIO_PIN_13
 #define RED_LED_PORT GPIOC
+
+#define SUDO_DELAY_TIME 5000000
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -61,11 +63,21 @@ static void MX_USART3_UART_Init(void);
 
 typedef uint32_t Counter;
 Counter task1Counter, task2Counter;  // it is wise to add a simple counter to each task to ensure its executing
-
+int priority = 1;
+TaskHandle_t task1_handle, task2_handle; // 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+void incrementPriority()
+{
+  if (priority < 15) {
+    priority++;
+  } else {
+    priority = 1;
+  }
+}
+
 void vTask1(void *pvParameters)
 {
   char msg[] = "Task 1 \n";
@@ -74,7 +86,9 @@ void vTask1(void *pvParameters)
     task1Counter++;
     HAL_UART_Transmit(&huart3, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
     HAL_GPIO_TogglePin(GPIOB, (uint16_t)pvParameters);
-    HAL_Delay(250);
+    for (int i = 0; i < SUDO_DELAY_TIME; i++){} // sudo delay
+    incrementPriority();
+    vTaskPrioritySet(task2_handle, priority);
   }
 }
 
@@ -86,7 +100,9 @@ void vTask2(void *pvParameters)
     task2Counter++;
     HAL_UART_Transmit(&huart3, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
     HAL_GPIO_TogglePin(GPIOC, (uint16_t)pvParameters);
-    HAL_Delay(500);
+    for (int i = 0; i < SUDO_DELAY_TIME; i++){} // sudo delay
+    incrementPriority();
+    vTaskPrioritySet(task1_handle, priority);
   }
 }
 /* USER CODE END 0 */
@@ -94,6 +110,8 @@ void vTask2(void *pvParameters)
 /**
   * @brief  The application entry point.
   * @retval int
+  * @note using a delay function will actually put a task "to sleep", meaning the scheduler will remove it and thus its priority is no longer relavent
+  * To create a "sudo delay", you should use a for loop. This way if another task of higher priority becomes active, the scheduler will stop the current task and enter the new task
   */
 int main(void)
 {
@@ -123,8 +141,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   char serialData[4] = "a b ";
 
-  xTaskCreate(vTask1, "Task 1", 100, (void *)BLUE_LED_PIN, 1, NULL);
-  xTaskCreate(vTask2, "Task 2", 100, (void *)RED_LED_PIN, 1, NULL);
+  xTaskCreate(vTask1, "Task 1", 100, (void *)BLUE_LED_PIN, 1, &task1_handle);
+  xTaskCreate(vTask2, "Task 2", 100, (void *)RED_LED_PIN, 2, &task2_handle);
 
   vTaskStartScheduler();
   /* USER CODE END 2 */
@@ -135,9 +153,6 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-    HAL_UART_Transmit(&huart3, (uint8_t *)serialData, strlen(serialData), HAL_MAX_DELAY);
-    HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
