@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,6 +33,11 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define BLUE_LED_PIN GPIO_PIN_7
+#define BLUE_LED_PORT GPIOB
+
+#define RED_LED_PIN GPIO_PIN_13
+#define RED_LED_PORT GPIOC
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -68,7 +73,8 @@ void vTask1(void *pvParameters)
   {
     task1Counter++;
     HAL_UART_Transmit(&huart3, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-    HAL_Delay(500);
+    HAL_GPIO_TogglePin(GPIOB, (uint16_t)pvParameters);
+    HAL_Delay(250);
   }
 }
 
@@ -79,6 +85,7 @@ void vTask2(void *pvParameters)
   {
     task2Counter++;
     HAL_UART_Transmit(&huart3, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+    HAL_GPIO_TogglePin(GPIOC, (uint16_t)pvParameters);
     HAL_Delay(500);
   }
 }
@@ -116,8 +123,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   char serialData[4] = "a b ";
 
-  xTaskCreate(vTask1, "Task 1", 100, NULL, 1, NULL);
-  xTaskCreate(vTask2, "Task 2", 100, NULL, 1, NULL);
+  xTaskCreate(vTask1, "Task 1", 100, (void *)BLUE_LED_PIN, 1, NULL);
+  xTaskCreate(vTask2, "Task 2", 100, (void *)RED_LED_PIN, 1, NULL);
 
   vTaskStartScheduler();
   /* USER CODE END 2 */
@@ -233,10 +240,13 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_7, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PA1 */
   GPIO_InitStruct.Pin = GPIO_PIN_1;
@@ -245,6 +255,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+  GPIO_InitStruct.Pin = GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
 
 /* USER CODE BEGIN 4 */
